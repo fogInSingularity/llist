@@ -1,0 +1,24 @@
+digraph {
+  rankdir=LR
+  node [shape = record];	node0 [shape = Mrecord, style = filled, fillcolor = cyan, label = " index: 0  | elem: 2147483647 | next: 1 | prev: 1"];
+  node0 -> node1
+  node1 -> node0
+	node1 [shape = Mrecord, style = filled, fillcolor = cyan, label = " index: 1  | elem: 123 | next: 0 | prev: 0"];
+  node1 -> node0
+  node0 -> node1
+	list [shape = Mrecord, style = filled, fillcolor = green, label = "size: 2 | cap: 8"];
+	free [shape = Mrecord, style = filled, fillcolor = red, label = "free | next: 2"];
+  free -> free2
+	free2 [shape = Mrecord, style = filled, fillcolor = orange, label = " index: 2  | elem: -2147483648 | next: 3 | prev: 18446744073709551615"];
+  free2 -> free3
+	free3 [shape = Mrecord, style = filled, fillcolor = orange, label = " index: 3  | elem: -2147483648 | next: 4 | prev: 18446744073709551615"];
+  free3 -> free4
+	free4 [shape = Mrecord, style = filled, fillcolor = orange, label = " index: 4  | elem: -2147483648 | next: 5 | prev: 18446744073709551615"];
+  free4 -> free5
+	free5 [shape = Mrecord, style = filled, fillcolor = orange, label = " index: 5  | elem: -2147483648 | next: 6 | prev: 18446744073709551615"];
+  free5 -> free6
+	free6 [shape = Mrecord, style = filled, fillcolor = orange, label = " index: 6  | elem: -2147483648 | next: 7 | prev: 18446744073709551615"];
+  free6 -> free7
+	free7 [shape = Mrecord, style = filled, fillcolor = orange, label = " index: 7  | elem: -2147483648 | next: 7 | prev: 18446744073709551615"];
+  free7 -> free7
+}

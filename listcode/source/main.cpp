@@ -1,0 +1,14 @@
+#include "llist.h"
+
+int main() {
+  LList list = {};
+  list.Ctor();
+
+  list.InsertAfter(0, 123);
+
+  list.DotDump();
+
+  list.Dtor();
+
+  return 0;
+}
