@@ -13,6 +13,7 @@ LListError LList::Ctor(size_t initCap) {
          initCap : kLListMinAlloc;
   list_ = (LLNode*)calloc(initCap, sizeof(LLNode));
   if (list_ == nullptr) {
+    size_ = 0;
     cap_ = 0;
     return LListError::CTOR_CANT_ALLOC;
   }
@@ -31,6 +32,7 @@ LListError LList::Ctor(size_t initCap) {
 void LList::Dtor() {
   free(list_);
   list_ = nullptr;
+
   size_ = 0;
   cap_ = 0;
 }
@@ -92,9 +94,9 @@ LListError LList::RemoveAt(uint64_t ind) {
   list_[ind].elem = kFreeTrashValue;
 
   list_[ind].next = free_;
+  free_ = ind;
 
   list_[ind].prev = kFreeTrashRef;
-  free_ = ind;
 
   size_--;
 
@@ -170,7 +172,7 @@ LListError LList::Linearize() {
 
 LListError LList::Recalloc() {
   LLNode* hold = list_;
-  list_ = (LLNode*)realloc(list_, cap_*sizeof(LLNode));
+  list_ = (LLNode*)realloc(list_, cap_ * sizeof(LLNode));
   if (list_ == nullptr) {
     list_ = hold;
     hold = nullptr;
@@ -178,7 +180,7 @@ LListError LList::Recalloc() {
     return LListError::RECALLOC_CANT_ALLOC;
   }
 
-  memset(list_ + size_, 0, (cap_ - size_)*sizeof(LLNode));
+  memset(list_ + size_, 0, (cap_ - size_) * sizeof(LLNode));
 
   return LListError::SUCCESS;
 }
