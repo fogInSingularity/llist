@@ -1,28 +1,31 @@
-#include "../include/llist.h"
+#include "llist.h"
 
 //static-----------------------------------------------------------------------
 
 static const size_t kLListMul = 2;
 static const uint64_t kFreeTrashRef = __UINT64_MAX__;
 static const elem_t kFreeTrashValue = INT_MIN;
+static const index_t kHeadTail = 0;
 
 //public-----------------------------------------------------------------------
 
 LListError LList::Ctor(size_t initCap) {
   cap_ = initCap > kLListMinAlloc ?
          initCap : kLListMinAlloc;
+
   list_ = (LLNode*)calloc(initCap, sizeof(LLNode));
   if (list_ == nullptr) {
     size_ = 0;
     cap_ = 0;
+
     return LListError::CTOR_CANT_ALLOC;
   }
 
-  list_[0] = {INT_MAX, 0, 0}; // head and tail
-  free_ = 0;
+  list_[kHeadTail] = {INT_MAX, 0, 0}; // head and tail
 
   size_ = 1;
 
+  free_ = 0;
   LListError error = LinkFree();
   if (error != LListError::SUCCESS) { return error; }
 
@@ -32,6 +35,7 @@ LListError LList::Ctor(size_t initCap) {
 void LList::Dtor() {
   free(list_);
   list_ = nullptr;
+  free_ = 0;
 
   size_ = 0;
   cap_ = 0;
@@ -40,14 +44,31 @@ void LList::Dtor() {
 void LList::ThrowError(LListError error) {
   switch (error) {
     case LListError::SUCCESS:
+      //---//
       break;
     case LListError::CTOR_CANT_ALLOC:
+      ERROR_M("constructor cant allocate memory");
       break;
     case LListError::RECALLOC_CANT_ALLOC:
+      ERROR_M("recalloc cant allocate memory");
       break;
     case LListError::REMOVE_INDEX_OOR:
+      ERROR_M("RemoveAt() function call on index out of range");
+      break;
+    case LListError::CANT_REMOVE_HEAD:
+      ERROR_M("RemoveAt() function call on head");
       break;
     case LListError::INSERT_INDEX_OOR:
+      ERROR_M("InsertAfter() function call on index out of range");
+      break;
+    case LListError::FRONT_ACCESS_ON_EMPTY_LIST:
+      ERROR_M("Front() function call on empty list");
+      break;
+    case LListError::BACK_ACCESS_ON_EMPTY_LIST:
+      ERROR_M("Back() function call on empty list");
+      break;
+    case LListError::POP_ON_EMPTY_LIST:
+      ERROR_M("Pop() function call on empty list");
       break;
     default:
       ASSERT(0 && "UNKNOWN ERROR CODE");
@@ -55,13 +76,67 @@ void LList::ThrowError(LListError error) {
   }
 }
 
-LListError LList::InsertAfter(uint64_t ind, elem_t elem) {
+bool LList::IsEmpty() {
+  return size_ - 1;
+}
+
+size_t LList::Size() {
+  return size_ - 1;
+}
+
+size_t LList::Capacity() {
+  return cap_ - 1;
+}
+
+LListError LList::Front(index_t* indRet) {
+  if (IsEmpty()) { return LListError::FRONT_ACCESS_ON_EMPTY_LIST; }
+
+  *indRet = list_[kHeadTail].next;
+
+  return LListError::SUCCESS;
+}
+
+LListError LList::Back(index_t* indRet) {
+  if (IsEmpty()) { return LListError::BACK_ACCESS_ON_EMPTY_LIST; }
+
+  *indRet = list_[kHeadTail].prev;
+
+  return LListError::SUCCESS;
+}
+
+LListError LList::PushFront(elem_t elem) {
+  return InsertAfter(kHeadTail, elem);
+}
+
+LListError LList::PushBack(elem_t elem) {
+  return InsertAfter(list_[kHeadTail].prev, elem);
+}
+
+LListError LList::PopFront() {
+  if (IsEmpty()) { return LListError::POP_ON_EMPTY_LIST; }
+
+  return RemoveAt(list_[kHeadTail].next);
+}
+
+LListError LList::PopBack() {
+  if (IsEmpty()) { return LListError::POP_ON_EMPTY_LIST; }
+
+  return RemoveAt(list_[kHeadTail].prev);
+}
+
+LListError LList::InsertAfter(index_t ind, elem_t elem) {
+  if (ind >= cap_) { return LListError::INSERT_INDEX_OOR; }
+  if ((list_[ind].elem == kFreeTrashValue)
+      && (list_[ind].prev == kFreeTrashRef)) {
+    return LListError::INSERT_INDEX_OOR;
+  }
+
   LListError error = ResizeUp();
   if (error != LListError::SUCCESS) {
     return error;
   }
 
-  uint64_t freeIndex = free_;
+  index_t freeIndex = free_;
 
   free_ = list_[freeIndex].next; // change free
 
@@ -78,7 +153,14 @@ LListError LList::InsertAfter(uint64_t ind, elem_t elem) {
   return LListError::SUCCESS;
 }
 
-LListError LList::RemoveAt(uint64_t ind) {
+LListError LList::RemoveAt(index_t ind) {
+  if (ind >= cap_) { return LListError::INSERT_INDEX_OOR; }
+  if (ind == kHeadTail) { return LListError::CANT_REMOVE_HEAD; }
+  if ((list_[ind].elem == kFreeTrashValue)
+      && (list_[ind].prev == kFreeTrashRef)) {
+    return LListError::REMOVE_INDEX_OOR;
+  }
+
   if (ind > size_) {
     return LListError::REMOVE_INDEX_OOR;
   }
@@ -103,13 +185,14 @@ LListError LList::RemoveAt(uint64_t ind) {
   return LListError::SUCCESS;
 }
 
+//FIXME - holy shit
 void LList::DotDump() {
   FILE* dotfile = fopen("dotdump.dot", "w");
   fprintf(dotfile, "digraph {\n");
   fprintf(dotfile, "  rankdir=LR\n");
   fprintf(dotfile, "  node [shape = record];");
 
-  uint64_t index = 0;
+  index_t index = kHeadTail;
   do {
     fprintf(dotfile,
             "	node%lu [shape = Mrecord, style = filled, fillcolor = cyan,"
@@ -118,7 +201,7 @@ void LList::DotDump() {
     fprintf(dotfile, "  node%lu -> node%lu\n", index, list_[index].next);
     fprintf(dotfile, "  node%lu -> node%lu\n", list_[index].next, index);
     index = list_[index].next;
-  } while (index != 0);
+  } while (index != kHeadTail);
 
   fprintf(dotfile,
           "	list [shape = Mrecord, style = filled, fillcolor = green,"
@@ -151,16 +234,16 @@ LListError LList::Linearize() {
   LLNode* hold = (LLNode*)calloc(size_ * kLListMul, sizeof(LLNode));
   cap_ = size_ * kLListMul;
 
-  uint64_t index = 0;
-  uint64_t storeIndex = 0;
+  index_t index = kHeadTail;
+  index_t storeIndex = 0;
   do {
     hold[storeIndex] = {list_[index].elem, storeIndex + 1, storeIndex - 1};
     index = list_[index].next;
     storeIndex++;
-  } while (index != 0);
+  } while (index != kHeadTail);
 
-  hold[0].prev = size_ - 1;
-  hold[size_ - 1].next = 0;
+  hold[kHeadTail].prev = size_ - 1;
+  hold[size_ - 1].next = kHeadTail;
 
   free(list_);
   list_ = hold;
@@ -226,7 +309,7 @@ LListError LList::LinkFree() {
     list_[ind].prev = kFreeTrashRef;
     list_[ind].elem = kFreeTrashValue;
   }
-  list_[cap_-1].next = cap_ - 1;
+  list_[cap_ - 1].next = cap_ - 1;
 
   return LListError::SUCCESS;
 }

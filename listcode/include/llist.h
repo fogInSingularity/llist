@@ -15,39 +15,59 @@ static const size_t kLListMinAlloc = 8;
 
 //public-----------------------------------------------------------------------
 
+#define ERROR_M(errorM)                                                       \
+  fputs(RED BOLD "error: " RESET errorM "\n", stdout);
+
 typedef int elem_t;
+typedef size_t index_t;
 
 enum class LListError {
-  SUCCESS,
-  CTOR_CANT_ALLOC,
-  RECALLOC_CANT_ALLOC,
-  REMOVE_INDEX_OOR,
-  INSERT_INDEX_OOR,
+  SUCCESS                    = 0,
+  CTOR_CANT_ALLOC            = 1,
+  RECALLOC_CANT_ALLOC        = 2,
+  REMOVE_INDEX_OOR           = 3,
+  CANT_REMOVE_HEAD           = 4,
+  INSERT_INDEX_OOR           = 5,
+  FRONT_ACCESS_ON_EMPTY_LIST = 6,
+  BACK_ACCESS_ON_EMPTY_LIST  = 7,
+  POP_ON_EMPTY_LIST          = 8,
 };
 
 struct LLNode {
   elem_t elem;
-  uint64_t next;
-  uint64_t prev;
+  index_t next;
+  index_t prev;
 };
 
 struct LList {
  public:
-  LLNode* list_;
-  size_t size_;
-  size_t cap_;
-
-  uint64_t free_;
-
   LListError Ctor(size_t initCap = kLListMinAlloc);
   void Dtor();
   void ThrowError(LListError error);
   void DotDump();
 
-  LListError InsertAfter(uint64_t ind, elem_t elem);
-  LListError RemoveAt(uint64_t ind);
+  bool IsEmpty();
+  size_t Size();
+  size_t Capacity();
+
+  LListError Front(index_t* indRet);
+  LListError Back(index_t* indRet);
+
+  LListError PushFront(elem_t elem);
+  LListError PushBack(elem_t elem);
+  LListError PopFront();
+  LListError PopBack();
+
+  LListError InsertAfter(index_t ind, elem_t elem);
+  LListError RemoveAt(index_t ind);
   LListError Linearize();
  private:
+  LLNode* list_;
+  size_t size_;
+  size_t cap_;
+
+  index_t free_;
+
   LListError Recalloc();
   LListError ResizeUp();
   LListError ResizeDown();
