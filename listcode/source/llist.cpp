@@ -53,19 +53,37 @@ void LList::ThrowError(LListError error) {
       ERROR_M("recalloc cant allocate memory");
       break;
     case LListError::REMOVE_INDEX_OOR:
-      ERROR_M("RemoveAt() function call on index out of range");
+      ERROR_M("RemoveAt() function call out of range");
       break;
     case LListError::CANT_REMOVE_HEAD:
       ERROR_M("RemoveAt() function call on head");
       break;
     case LListError::INSERT_INDEX_OOR:
-      ERROR_M("InsertAfter() function call on index out of range");
+      ERROR_M("InsertAfter() function call out of range");
       break;
     case LListError::FRONT_ACCESS_ON_EMPTY_LIST:
       ERROR_M("Front() function call on empty list");
       break;
     case LListError::BACK_ACCESS_ON_EMPTY_LIST:
       ERROR_M("Back() function call on empty list");
+      break;
+    case LListError::SET_INDEX_OOR:
+      ERROR_M("SetElemAt() function call out of range");
+      break;
+    case LListError::CANT_SET_HEAD:
+      ERROR_M("SetElemAt() function call on head");
+      break;
+    case LListError::GET_ELEM_INDEX_OOR:
+      ERROR_M("GetElemAt() function call out of range");
+      break;
+    case LListError::CANT_GET_ELEM_OF_HEAD:
+      ERROR_M("GetElemAt() function call on head");
+      break;
+    case LListError::GET_NEXT_INDEX_OOR:
+      ERROR_M("GetNextAr() function call out of range");
+      break;
+    case LListError::GET_PREV_INDEX_OOR:
+      ERROR_M("GetPrevAt() function call out of range");
       break;
     case LListError::POP_ON_EMPTY_LIST:
       ERROR_M("Pop() function call on empty list");
@@ -104,6 +122,46 @@ LListError LList::Back(index_t* indRet) {
   return LListError::SUCCESS;
 }
 
+LListError LList::SetElemAt(index_t ind, elem_t elem) {
+  LListError error = OutOfRangeCheck(ind, LListError::SET_INDEX_OOR);
+  if (error != LListError::SUCCESS) { return error; }
+
+  if (ind == kHeadTail) { return LListError::CANT_SET_HEAD; }
+
+  list_[ind].elem = elem;
+
+  return LListError::SUCCESS;
+}
+
+LListError LList::GetElemAt(index_t ind, elem_t* elemRet) {
+  LListError error = OutOfRangeCheck(ind, LListError::GET_ELEM_INDEX_OOR);
+  if (error != LListError::SUCCESS) { return error; }
+
+  if (ind == kHeadTail) { return LListError::CANT_GET_ELEM_OF_HEAD; }
+
+  *elemRet = list_[ind].elem;
+
+  return LListError::SUCCESS;
+}
+
+LListError LList::GetNextAt(index_t ind, index_t* indRet) {
+  LListError error = OutOfRangeCheck(ind, LListError::GET_NEXT_INDEX_OOR);
+  if (error != LListError::SUCCESS) { return error; }
+
+  *indRet = list_[ind].next;
+
+  return LListError::SUCCESS;
+}
+
+LListError LList::GetPrevAt(index_t ind, index_t* indRet) {
+  LListError error = OutOfRangeCheck(ind, LListError::GET_PREV_INDEX_OOR);
+  if (error != LListError::SUCCESS) { return error; }
+
+  *indRet = list_[ind].prev;
+
+  return LListError::SUCCESS;
+}
+
 LListError LList::PushFront(elem_t elem) {
   return InsertAfter(kHeadTail, elem);
 }
@@ -125,13 +183,10 @@ LListError LList::PopBack() {
 }
 
 LListError LList::InsertAfter(index_t ind, elem_t elem) {
-  if (ind >= cap_) { return LListError::INSERT_INDEX_OOR; }
-  if ((list_[ind].elem == kFreeTrashValue)
-      && (list_[ind].prev == kFreeTrashRef)) {
-    return LListError::INSERT_INDEX_OOR;
-  }
+  LListError error = OutOfRangeCheck(ind, LListError::INSERT_INDEX_OOR);
+  if (error != LListError::SUCCESS) { return error; }
 
-  LListError error = ResizeUp();
+  error = ResizeUp();
   if (error != LListError::SUCCESS) {
     return error;
   }
@@ -154,18 +209,12 @@ LListError LList::InsertAfter(index_t ind, elem_t elem) {
 }
 
 LListError LList::RemoveAt(index_t ind) {
-  if (ind >= cap_) { return LListError::INSERT_INDEX_OOR; }
+  LListError error = OutOfRangeCheck(ind, LListError::REMOVE_INDEX_OOR);
+  if (error != LListError::SUCCESS) { return error; }
+
   if (ind == kHeadTail) { return LListError::CANT_REMOVE_HEAD; }
-  if ((list_[ind].elem == kFreeTrashValue)
-      && (list_[ind].prev == kFreeTrashRef)) {
-    return LListError::REMOVE_INDEX_OOR;
-  }
 
-  if (ind > size_) {
-    return LListError::REMOVE_INDEX_OOR;
-  }
-
-  LListError error = ResizeDown();
+  error = ResizeDown();
   if (error != LListError::SUCCESS) {
     return error;
   }
@@ -252,6 +301,16 @@ LListError LList::Linearize() {
 }
 
 //private----------------------------------------------------------------------
+
+LListError LList::OutOfRangeCheck(index_t ind, LListError error) {
+  if (ind >= cap_) { return error; }
+  if ((list_[ind].elem == kFreeTrashValue)
+      && (list_[ind].prev == kFreeTrashRef)) {
+    return error;
+  }
+
+  return LListError::SUCCESS;
+}
 
 LListError LList::Recalloc() {
   LLNode* hold = list_;

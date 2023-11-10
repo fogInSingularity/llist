@@ -31,7 +31,13 @@ enum class LListError {
   INSERT_INDEX_OOR           = 5,
   FRONT_ACCESS_ON_EMPTY_LIST = 6,
   BACK_ACCESS_ON_EMPTY_LIST  = 7,
-  POP_ON_EMPTY_LIST          = 8,
+  SET_INDEX_OOR              = 8,
+  CANT_SET_HEAD              = 9,
+  GET_ELEM_INDEX_OOR         = 10,
+  CANT_GET_ELEM_OF_HEAD      = 11,
+  GET_NEXT_INDEX_OOR         = 12,
+  GET_PREV_INDEX_OOR         = 13,
+  POP_ON_EMPTY_LIST          = 14,
 };
 
 /// @brief list node
@@ -111,6 +117,46 @@ struct LList {
   LListError Back(index_t* indRet);
 
   /**
+   * @brief sets the element of the node
+   *
+   * @param ind index of node
+   * @param elem element of the node
+   *
+   * @return list error
+  */
+  LListError SetElemAt(index_t ind, elem_t elem);
+
+  /**
+   * @brief gets the element of the node
+   *
+   * @param ind index of the node
+   * @param elemRet return element
+   *
+   * @return list error
+  */
+  LListError GetElemAt(index_t ind, elem_t* elemRet);
+
+  /**
+   * @brief gets the next index of the node
+   *
+   * @param ind index of the node
+   * @param indRet return index of the next node
+   *
+   * @return list error
+  */
+  LListError GetNextAt(index_t ind, index_t* indRet);
+
+  /**
+   * @brief gets the previous index of the node
+   *
+   * @param ind index of the node
+   * @param indRet return index of the previous node
+   *
+   * @return list error
+  */
+  LListError GetPrevAt(index_t ind, index_t* indRet);
+
+  /**
    * @brief prepends the given node to the beginning of the list
    *
    * @param elem node to prepand
@@ -174,6 +220,7 @@ struct LList {
 
   index_t free_;
 
+  LListError OutOfRangeCheck(index_t ind, LListError error);
   LListError Recalloc();
   LListError ResizeUp();
   LListError ResizeDown();
