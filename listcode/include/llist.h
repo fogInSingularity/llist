@@ -38,6 +38,7 @@ enum class LListError {
   GET_NEXT_INDEX_OOR         = 12,
   GET_PREV_INDEX_OOR         = 13,
   POP_ON_EMPTY_LIST          = 14,
+  LINEARIZE_CANT_ALLOC       = 15,
 };
 
 /// @brief list node
@@ -50,7 +51,6 @@ struct LLNode {
 /// @brief double linked list
 struct LList {
  public:
-
   /**
    * @brief list constructor
    *
@@ -92,7 +92,7 @@ struct LList {
   size_t Size();
 
   /**
-   * @brief returns
+   * @brief returns maximum number of nodes
    *
    * @return maximum number of nodes in list
   */

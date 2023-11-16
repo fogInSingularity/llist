@@ -32,7 +32,7 @@ LListError LList::Ctor(size_t initCap) {
   return LListError::SUCCESS;
 }
 
-void LList::Dtor() {
+void LList::Dtor() { // NOTE down up destr
   free(list_);
   list_ = nullptr;
   free_ = 0;
@@ -95,7 +95,7 @@ void LList::ThrowError(LListError error) {
 }
 
 bool LList::IsEmpty() {
-  return size_ - 1;
+  return !(Size());
 }
 
 size_t LList::Size() {
@@ -107,6 +107,8 @@ size_t LList::Capacity() {
 }
 
 LListError LList::Front(index_t* indRet) {
+  ASSERT(indRet != nullptr);
+
   if (IsEmpty()) { return LListError::FRONT_ACCESS_ON_EMPTY_LIST; }
 
   *indRet = list_[kHeadTail].next;
@@ -115,6 +117,8 @@ LListError LList::Front(index_t* indRet) {
 }
 
 LListError LList::Back(index_t* indRet) {
+  ASSERT(indRet != nullptr);
+
   if (IsEmpty()) { return LListError::BACK_ACCESS_ON_EMPTY_LIST; }
 
   *indRet = list_[kHeadTail].prev;
@@ -134,6 +138,8 @@ LListError LList::SetElemAt(index_t ind, elem_t elem) {
 }
 
 LListError LList::GetElemAt(index_t ind, elem_t* elemRet) {
+  ASSERT(elemRet != nullptr);
+
   LListError error = OutOfRangeCheck(ind, LListError::GET_ELEM_INDEX_OOR);
   if (error != LListError::SUCCESS) { return error; }
 
@@ -145,6 +151,8 @@ LListError LList::GetElemAt(index_t ind, elem_t* elemRet) {
 }
 
 LListError LList::GetNextAt(index_t ind, index_t* indRet) {
+  ASSERT(indRet != nullptr);
+
   LListError error = OutOfRangeCheck(ind, LListError::GET_NEXT_INDEX_OOR);
   if (error != LListError::SUCCESS) { return error; }
 
@@ -154,6 +162,8 @@ LListError LList::GetNextAt(index_t ind, index_t* indRet) {
 }
 
 LListError LList::GetPrevAt(index_t ind, index_t* indRet) {
+  ASSERT(indRet != nullptr);
+
   LListError error = OutOfRangeCheck(ind, LListError::GET_PREV_INDEX_OOR);
   if (error != LListError::SUCCESS) { return error; }
 
@@ -187,9 +197,7 @@ LListError LList::InsertAfter(index_t ind, elem_t elem) {
   if (error != LListError::SUCCESS) { return error; }
 
   error = ResizeUp();
-  if (error != LListError::SUCCESS) {
-    return error;
-  }
+  if (error != LListError::SUCCESS) { return error; }
 
   index_t freeIndex = free_;
 
@@ -214,11 +222,6 @@ LListError LList::RemoveAt(index_t ind) {
 
   if (ind == kHeadTail) { return LListError::CANT_REMOVE_HEAD; }
 
-  error = ResizeDown();
-  if (error != LListError::SUCCESS) {
-    return error;
-  }
-
   list_[list_[ind].next].prev = list_[ind].prev; // ->[]
   list_[list_[ind].prev].next = list_[ind].next; // []->
 
@@ -230,6 +233,9 @@ LListError LList::RemoveAt(index_t ind) {
   list_[ind].prev = kFreeTrashRef;
 
   size_--;
+
+  error = ResizeDown();
+  if (error != LListError::SUCCESS) { return error; }
 
   return LListError::SUCCESS;
 }
@@ -281,6 +287,8 @@ void LList::DotDump() {
 
 LListError LList::Linearize() {
   LLNode* hold = (LLNode*)calloc(size_ * kLListMul, sizeof(LLNode));
+  if (hold == nullptr) { return LListError::LINEARIZE_CANT_ALLOC; }
+
   cap_ = size_ * kLListMul;
 
   index_t index = kHeadTail;
