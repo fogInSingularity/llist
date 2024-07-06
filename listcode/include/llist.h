@@ -214,10 +214,11 @@ struct LList {
   */
   LListError Linearize();
  private:
-  LLNode* list_;
-  size_t size_;
   size_t cap_;
+  size_t size_;
+  LLNode* list_;
 
+  size_t fileCounter_;
   index_t free_;
 
   LListError OutOfRangeCheck(index_t ind, LListError error);
@@ -225,6 +226,7 @@ struct LList {
   LListError ResizeUp();
   LListError ResizeDown();
   LListError LinkFree();
+  void MakeHTML();
 };
 
 #endif // LLIST_H

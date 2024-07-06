@@ -1,0 +1,9 @@
+llist
+dotdump.dot
+todo
+.vscode
+dump/
+logs.log
+output
+*.dot
+*.svg

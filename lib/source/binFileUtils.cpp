@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <string.h>
 
-#include "../include/debug.h"
-#include "../include/binFileUtils.h"
+#include "debug.h"
+#include "binFileUtils.h"
 
 // ---------------------------------------
 
@@ -21,7 +20,7 @@ void GetData(BinData* data, FILE* file) {
 
   data->bufSz = FileSize(file);
 
-  data->buf = (byte_t*)calloc(data->bufSz, sizeof(char));
+  data->buf = (byte_t*)calloc(data->bufSz, sizeof(byte_t));
 
   FileRead(data, file);
 }

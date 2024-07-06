@@ -1,4 +1,4 @@
-#include "../include/mystring.h"
+#include "mystring.h"
 
 char* Strchr(String* str, char ch) {
   char* move = str->str;

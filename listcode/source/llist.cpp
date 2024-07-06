@@ -24,6 +24,7 @@ LListError LList::Ctor(size_t initCap) {
   list_[kHeadTail] = {INT_MAX, 0, 0}; // head and tail
 
   size_ = 1;
+  fileCounter_ = 0;
 
   free_ = 0;
   LListError error = LinkFree();
@@ -32,11 +33,15 @@ LListError LList::Ctor(size_t initCap) {
   return LListError::SUCCESS;
 }
 
-void LList::Dtor() { // NOTE down up destr
-  free(list_);
-  list_ = nullptr;
+void LList::Dtor() {
+  MakeHTML();
+
   free_ = 0;
 
+  free(list_);
+  list_ = nullptr;
+
+  fileCounter_ = 0;
   size_ = 0;
   cap_ = 0;
 }
@@ -87,6 +92,9 @@ void LList::ThrowError(LListError error) {
       break;
     case LListError::POP_ON_EMPTY_LIST:
       ERROR_M("Pop() function call on empty list");
+      break;
+    case LListError::LINEARIZE_CANT_ALLOC:
+      ERROR_M("bad alloc during lineaize");
       break;
     default:
       ASSERT(0 && "UNKNOWN ERROR CODE");
@@ -242,7 +250,11 @@ LListError LList::RemoveAt(index_t ind) {
 
 //FIXME - holy shit
 void LList::DotDump() {
-  FILE* dotfile = fopen("dotdump.dot", "w");
+  // static size_t counter = 0;
+  char fileName[100] = "";
+  sprintf(fileName, "dump/dotdump%lu.dot", fileCounter_);
+
+  FILE* dotfile = fopen(fileName, "w");
   fprintf(dotfile, "digraph {\n");
   fprintf(dotfile, "  rankdir=LR\n");
   fprintf(dotfile, "  node [shape = record];");
@@ -283,6 +295,14 @@ void LList::DotDump() {
   fprintf(dotfile, "  free%lu -> free%lu\n", index, list_[index].next);
 
   fprintf(dotfile, "}\n");
+
+  fclose(dotfile);
+
+  char command[100] = "";
+  sprintf(command, "dot dump/dotdump%lu.dot -Tsvg > dump/output%lu.svg", fileCounter_, fileCounter_);
+  system(command);
+
+  fileCounter_++;
 }
 
 LListError LList::Linearize() {
@@ -380,3 +400,13 @@ LListError LList::LinkFree() {
 
   return LListError::SUCCESS;
 }
+
+void LList::MakeHTML() { //NOTE - cringe
+  FILE* html_file = fopen("dump.html", "w");
+
+  fprintf(html_file, "<hr/>");
+  for (size_t i = 0; i < fileCounter_; i++) {
+    fprintf(html_file, "<img src = \"dump/output%lu.svg\"><br><br><br><br><br><br><br><br>", i);
+  }
+}
+

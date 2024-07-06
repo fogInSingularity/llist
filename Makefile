@@ -38,3 +38,16 @@ release:
 
 clean:
 	@rm llist
+
+analyze:
+	@clang-tidy $(SOURCES) -checks=clang-analyzer-*
+
+performance:
+	@clang-tidy $(SOURCES) -checks=performance-*
+
+portability:
+	@clang-tidy $(SOURCES) -checks=portability-*
+
+readablility:
+	@clang-tidy $(SOURCES) -checks=readability-$(READ_FLAGS)
+

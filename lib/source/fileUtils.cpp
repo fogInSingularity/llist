@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../include/debug.h"
+#include "debug.h"
 
-#include "../include/fileUtils.h"
+#include "fileUtils.h"
 
 // ---------------------------------------
 
